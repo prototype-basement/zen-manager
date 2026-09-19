@@ -49,9 +49,17 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - name: Install build dependencies (macOS)
+      # Not Homebrew: its bottles carry the runner's macOS version as their
+      # minimum, which would stop the app launching on anything older than the
+      # runner. Building from source pins the minimum to macOS 11.
+      - name: Build libusb and libmtp (macOS)
         if: matrix.os == 'macos'
-        run: brew install libmtp
+        run: |
+          command -v pkg-config > /dev/null || brew install pkgconf
+          chmod +x packaging/macos-deps.sh
+          ./packaging/macos-deps.sh "$RUNNER_TEMP/macos-deps"
+          echo "PKG_CONFIG_PATH=$RUNNER_TEMP/macos-deps/lib/pkgconfig" >> "$GITHUB_ENV"
+          echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> "$GITHUB_ENV"
 
       - name: Install build dependencies (Linux)
         if: matrix.os == 'linux'
@@ -80,6 +88,12 @@ jobs:
         run: |
           chmod +x packaging/macos-bundle.sh
           ./packaging/macos-bundle.sh
+          for f in "target/release/bundle/ZEN Manager.app/Contents/MacOS/zenmanager" \
+                   "target/release/bundle/ZEN Manager.app/Contents/Frameworks/"*.dylib; do
+            minos=$(otool -l "$f" | awk '/LC_BUILD_VERSION/{f=1} f&&/minos/{print $2; exit}')
+            echo "$(basename "$f"): minos $minos"
+            [ "$minos" = "11.0" ] || { echo "::error::$f requires macOS $minos, expected 11.0"; exit 1; }
+          done
           cd target/release/bundle
           # ditto preserves the bundle's symlinks and permissions; zip does not.
           ditto -c -k --keepParent "ZEN Manager.app" \
@@ -105,24 +119,27 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
+      # Checked out only to read the release notes written for this tag.
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
+          path: dist
           merge-multiple: true
+
+      # docs/releases/<tag>.md is written by hand before tagging, so it can be
+      # reviewed like any other change. install.md is shared by every release.
+      - name: Compose release notes
+        run: |
+          notes="docs/releases/${GITHUB_REF_NAME}.md"
+          {
+            if [ -f "$notes" ]; then cat "$notes"; echo; fi
+            cat docs/releases/install.md
+          } > "$RUNNER_TEMP/notes.md"
 
       - uses: softprops/action-gh-release@v2
         with:
           files: |
-            *.zip
-            *.tar.gz
-          generate_release_notes: true
-          body: |
-            ## Install
-
-            **macOS** — unzip and drag to Applications. The build is unsigned,
-            so the first launch needs right-click → Open, or
-            `xattr -dr com.apple.quarantine "ZEN Manager.app"`.
-            libmtp is bundled; nothing else to install.
-
-            **Linux** — extract and run `./install.sh`. Needs libmtp from your
-            distro, which also installs the udev rules that let a normal user
-            access the player.
+            dist/*.zip
+            dist/*.tar.gz
+          body_path: ${{ runner.temp }}/notes.md

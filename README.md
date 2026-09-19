@@ -57,7 +57,7 @@ Tagging a version builds and publishes packages for **macOS** (Apple Silicon and
 Intel) and **Linux** (x86_64 and arm64) to the
 [releases page](https://github.com/prototype-basement/zen-manager/releases).
 
-**macOS** — unzip, drag to Applications. The build is unsigned, so the first
+**macOS 11 or newer** (Apple Silicon or Intel) — unzip, drag to Applications. The build is unsigned, so the first
 launch needs right-click → Open (or
 `xattr -dr com.apple.quarantine "ZEN Manager.app"`). libmtp is bundled inside
 the app; nothing else to install.
@@ -199,6 +199,17 @@ Nothing is built or uploaded by hand.
 
 `workflow_dispatch` runs the same matrix without publishing, which is the way to
 check a build before committing to a tag.
+
+Release notes are written by hand in `docs/releases/<tag>.md` — for example
+`docs/releases/v1.0.1.md` — and committed before tagging, so they are reviewed
+like any other change. CI appends the shared install instructions from
+`docs/releases/install.md`. With no notes file, the release gets only those.
+
+The macOS jobs build libusb and libmtp from source (`packaging/macos-deps.sh`)
+rather than using Homebrew. Homebrew's libraries require the macOS version of
+the machine that built them, which would stop the app launching on anything
+older than the CI runner. Building from source keeps the minimum at macOS 11,
+and CI fails if anything in the bundle asks for more.
 
 Version lives in one place, `Cargo.toml`. The About screen reads it from
 `CARGO_PKG_VERSION`, so it cannot drift from the tag. The release codename is a
