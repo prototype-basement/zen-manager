@@ -27,8 +27,10 @@ jobs:
           - label: macOS arm64
             runner: macos-14
             os: macos
+          # macos-13 was retired in December 2025. macos-15-intel is GitHub's
+          # last x86_64 macOS image, supported until August 2027.
           - label: macOS x86_64
-            runner: macos-13
+            runner: macos-15-intel
             os: macos
           # Oldest supported Ubuntu, because the binary links against the
           # glibc of whatever built it and newer glibc is not backwards
@@ -59,7 +61,7 @@ jobs:
           # winit need to build on Linux.
           sudo apt-get install -y --no-install-recommends \
             libmtp-dev \
-            libfontconfig-1-dev \
+            libfontconfig1-dev \
             libxkbcommon-dev \
             libxcb1-dev \
             libx11-dev \
