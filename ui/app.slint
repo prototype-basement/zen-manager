@@ -1,0 +1,1553 @@
+import { ListView, ScrollView, ProgressIndicator, ComboBox, Palette, AboutSlint } from "std-widgets.slint";
+import { Icons, Icon } from "icons.slint";
+
+export struct QueueRow {
+    name: string,
+    detail: string,
+    glyph: string,
+    message: string,
+    blocked: bool,
+    title: string,
+    artist: string,
+    album: string,
+    genre: string,
+    track_no: string,
+    duration: string,
+}
+
+export struct MusicRow {
+    label: string,
+    track_count: int,
+    size_text: string,
+    depth: int,
+    // 0 = unchecked, 1 = partial, 2 = checked
+    check: int,
+    expanded: bool,
+    expandable: bool,
+}
+
+global Theme {
+    in-out property <bool> dark: false;
+
+    // Near-monochrome by design. The only saturated colour in the app is the
+    // destructive red; everything else is a grey, so state reads through
+    // weight and spacing rather than hue.
+    out property <color> bg: dark ? #141417 : #fcfcfd;
+    out property <color> sidebar: dark ? #1a1a1e : #f7f7f9;
+    out property <color> panel: dark ? #1f1f24 : #ffffff;
+    out property <color> line: dark ? #ffffff14 : #00000010;
+    out property <color> line-strong: dark ? #ffffff26 : #0000001f;
+
+    out property <color> text: dark ? #f4f4f7 : #16161a;
+    out property <color> dim: dark ? #a2a2ac : #6e6e78;
+    out property <color> faint: dark ? #6f6f7a : #9a9aa4;
+
+    // The accent is ink rather than a hue: primary actions read near-black on
+    // light and near-white on dark, keeping the palette monochrome.
+    out property <color> accent: dark ? #ebebf0 : #23262d;
+    out property <color> on-accent: dark ? #16161a : #ffffff;
+
+    // Status hues, desaturated to sit inside a near-monochrome palette.
+    out property <color> ok: dark ? #7fa88b : #4a7c59;
+    out property <color> warn: dark ? #c3a87a : #8a6d43;
+    out property <color> bad: dark ? #e0847b : #b4453b;
+
+    out property <color> hover: dark ? #ffffff0d : #00000008;
+    out property <color> selected: dark ? #ffffff14 : #00000010;
+    out property <color> row-alt: dark ? #ffffff08 : #00000006;
+    out property <color> sunken: dark ? #ffffff05 : #00000004;
+    out property <color> outline: dark ? #ffffff26 : #00000018;
+    out property <color> box-border: dark ? #ffffff3d : #00000038;
+    out property <color> pie-track: dark ? #2e2e36 : #e6e6ea;
+    out property <color> drop-tint: dark ? #ffffff0a : #00000005;
+
+    out property <color> danger: dark ? #e0847b : #b4453b;
+    out property <color> danger-soft: dark ? #e0847b14 : #b4453b0f;
+    out property <color> danger-hover: dark ? #e0847b2b : #b4453b1f;
+
+    // One spacing scale, so every gap in the app is a multiple of one unit.
+    out property <length> gap-xs: 4px;
+    out property <length> gap-s: 8px;
+    out property <length> gap-m: 14px;
+    out property <length> gap-l: 20px;
+    out property <length> gap-xl: 28px;
+
+    out property <length> page-pad: 28px;
+    out property <length> row-height: 36px;
+    out property <length> radius: 7px;
+}
+
+// Buttons are hand-rolled because std-widgets Button cannot follow a custom
+// palette, which is what made the app look like two designs stitched together.
+component BaseButton inherits Rectangle {
+    in property <string> label;
+    in property <bool> enabled: true;
+    in property <brush> fill;
+    in property <brush> fill-hover;
+    in property <brush> label-color;
+    in property <brush> border;
+    callback clicked();
+
+    height: 28px;
+    border-radius: Theme.radius;
+    border-width: 1px;
+    border-color: enabled ? border : Theme.line;
+    background: enabled ? (touch.has-hover ? fill-hover : fill) : transparent;
+    opacity: enabled ? 1.0 : 0.4;
+
+    touch := TouchArea {
+        mouse-cursor: enabled ? pointer : default;
+        clicked => {
+            if (enabled) {
+                root.clicked();
+            }
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: 13px;
+        padding-right: 13px;
+        Text {
+            text: label;
+            font-size: 12px;
+            font-weight: 500;
+            color: label-color;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+        }
+    }
+}
+
+component PrimaryButton inherits BaseButton {
+    fill: Theme.accent;
+    fill-hover: Theme.accent;
+    label-color: Theme.on-accent;
+    border: Theme.accent;
+}
+
+component GhostButton inherits BaseButton {
+    fill: transparent;
+    fill-hover: Theme.hover;
+    label-color: Theme.text;
+    border: Theme.line-strong;
+}
+
+component DangerButton inherits BaseButton {
+    fill: Theme.danger-soft;
+    fill-hover: Theme.danger-hover;
+    label-color: Theme.danger;
+    border: Theme.danger;
+}
+
+component NavItem inherits Rectangle {
+    in property <string> label;
+    in property <string> icon;
+    in property <bool> selected: false;
+    callback clicked();
+
+    height: 34px;
+    border-radius: Theme.radius;
+    background: selected ? Theme.selected : (touch.has-hover ? Theme.hover : transparent);
+
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked();
+        }
+    }
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        spacing: 8px;
+
+        VerticalLayout {
+            alignment: center;
+            Icon {
+                path: icon;
+                tint: selected ? Theme.text : Theme.dim;
+                size: 16px;
+            }
+        }
+
+        Text {
+            text: label;
+            font-size: 12.5px;
+            font-weight: selected ? 700 : 400;
+            color: Theme.text;
+            vertical-alignment: center;
+            overflow: elide;
+        }
+
+        // Absorbs the slack so the label stays left-aligned.
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+    }
+}
+
+component TagLine inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> value;
+    spacing: 8px;
+
+    Text {
+        text: label;
+        font-size: 11px;
+        color: Theme.dim;
+        width: 62px;
+    }
+
+    Text {
+        text: value;
+        font-size: 11.5px;
+        color: Theme.text;
+        overflow: elide;
+        horizontal-stretch: 1;
+        min-width: 0px;
+    }
+}
+
+component CreditLine inherits HorizontalLayout {
+    in property <string> name;
+    in property <string> role;
+    in property <string> license;
+    spacing: Theme.gap-s;
+
+    Text {
+        text: name;
+        font-size: 11.5px;
+        font-weight: 500;
+        color: Theme.text;
+        width: 96px;
+        overflow: elide;
+    }
+
+    Text {
+        text: role;
+        font-size: 11.5px;
+        color: Theme.dim;
+        horizontal-stretch: 1;
+        overflow: elide;
+        min-width: 0px;
+    }
+
+    Text {
+        text: license;
+        font-size: 11px;
+        color: Theme.faint;
+        overflow: elide;
+    }
+}
+
+component SectionLabel inherits Text {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: Theme.faint;
+    letter-spacing: 1.4px;
+}
+
+component Divider inherits Rectangle {
+    height: 1px;
+    background: Theme.line;
+}
+
+export component AppWindow inherits Window {
+    title: "ZEN Manager";
+    // Matches the bundled family, so the app looks the same everywhere and
+    // scripts outside it resolve through the registered fallbacks.
+    default-font-family: "Noto Sans";
+    background: Theme.bg;
+    preferred-width: 1000px;
+    preferred-height: 660px;
+    min-width: 820px;
+    min-height: 540px;
+
+    in property <string> app-version: "";
+    in property <string> app-codename: "";
+    in property <string> device-name: "No device";
+    in property <bool> device-connected: false;
+    in property <int> battery-state: 0;
+    in property <int> battery-percent: 0;
+    in property <int> battery-current: 0;
+    in property <int> battery-max: 0;
+    in property <string> storage-free-text: "";
+    in property <string> storage-capacity-text: "";
+    in property <string> storage-used-text: "";
+    in property <string> storage-used-percent-text: "";
+    in property <string> device-detail: "";
+    in property <[QueueRow]> queue;
+    // -1 when no row is being inspected.
+    property <int> queue-selected: -1;
+
+    // Kept in step with THIRD-PARTY.md.
+    property <[{name: string, role: string, license: string}]> credits: [
+        { name: "Slint", role: @tr("user interface"), license: "Royalty-free 2.0" },
+        { name: "libmtp", role: @tr("talking to the device"), license: "LGPL-2.1+" },
+        { name: "libmtp-rs", role: @tr("Rust bindings for libmtp"), license: "MIT" },
+        { name: "Lofty", role: @tr("reading audio tags"), license: "MIT / Apache-2.0" },
+        { name: "rfd", role: @tr("native file dialogs"), license: "MIT" },
+        { name: "winit", role: @tr("windowing and file drops"), license: "Apache-2.0" },
+        { name: "anyhow", role: @tr("error handling"), license: "MIT / Apache-2.0" },
+        { name: "chrono", role: @tr("dates and times"), license: "MIT / Apache-2.0" },
+        { name: "dirs", role: @tr("finding the config directory"), license: "MIT / Apache-2.0" },
+        { name: "Noto Sans", role: @tr("bundled fonts"), license: "SIL OFL 1.1" },
+        { name: "Lucide", role: @tr("icons"), license: "ISC" },
+        { name: "Rust", role: @tr("language and toolchain"), license: "MIT / Apache-2.0" },
+    ];
+    in property <[MusicRow]> music-rows;
+    in property <int> music-checked: 0;
+    in property <int> music-total: 0;
+    in property <int> queue-count: 0;
+    in property <string> queue-size-text: "";
+
+    // Status arrives as a code plus numbers; the wording happens here so that
+    // @tr() can reach it. Codes mirror `pub mod status` in src/worker.rs.
+    in property <int> status-code: 0;
+    in property <int> status-n: 0;
+    in property <int> status-total: 0;
+    in property <string> status-name: "";
+    in property <int> status-failed: 0;
+    // Verbatim libmtp text; deliberately untranslated for this version.
+    in property <string> status-detail: "";
+    in property <int> transferable-count: 0;
+    in property <bool> busy: false;
+    in property <float> progress: 0;
+    in property <bool> drop-hover: false;
+    in property <float> storage-used-fraction: 0;
+    // Under 5% free counts as nearly full.
+    property <bool> storage-critical: storage-used-fraction > 0.95;
+
+    property <string> queue-summary: queue-count == 0
+        ? @tr("No files queued")
+        : (queue-count == 1
+            ? @tr("{} file · {}", queue-count, queue-size-text)
+            : @tr("{} files · {}", queue-count, queue-size-text));
+
+    property <string> storage-line: @tr("{} free of {}", storage-free-text, storage-capacity-text);
+
+    property <string> battery-line: battery-state == 2
+        ? @tr("On external power")
+        : (battery-state == 1
+            ? @tr("Battery {}%  ·  device reports {} of {}", battery-percent, battery-current, battery-max)
+            : @tr("Battery level unavailable"));
+
+    property <string> status-base:
+          status-code == 1 ? @tr("Ready")
+        : status-code == 2 ? @tr("Ready — {} will be skipped", status-n)
+        : status-code == 3 ? @tr("{} cannot be sent", status-n)
+        : status-code == 4 ? @tr("Reading files…")
+        : status-code == 5 ? @tr("Looking for a device…")
+        : status-code == 6 ? @tr("Sending {} of {}: {}", status-n, status-total, status-name)
+        : status-code == 7 ? @tr("Sent {} of {} tracks.", status-n, status-total)
+        : status-code == 8 ? @tr("Cancelled after {} of {} tracks.", status-n, status-total)
+        : status-code == 9 ? @tr("Deleting {} of {}…", status-n, status-total)
+        : status-code == 10 ? @tr("Deleted {} of {} tracks.", status-n, status-total)
+        : status-code == 12 ? @tr("{} tracks on the device.", status-n)
+        : status-code == 13 ? @tr("No device connected.")
+        : "";
+
+    property <string> status: status-failed > 0
+        ? status-base + " " + @tr("{} failed", status-failed) + " — " + status-detail
+        : (status-detail != "" && status-code == 13
+            ? status-base + " " + status-detail
+            : status-base);
+    in property <string> storage-wedge: "";
+
+
+    // 0 = follow the OS, 1 = light, 2 = dark
+    in property <int> theme-mode: 0;
+    in property <int> language-index: 0;
+    in property <[string]> language-names;
+    in property <bool> os-dark: false;
+    property <bool> dark-active: theme-mode == 0 ? os-dark : theme-mode == 2;
+
+    // Called by Rust after theme-mode changes. Done as an explicit callback
+    // rather than a binding because these are globals owned elsewhere, which a
+    // component cannot bind to directly.
+    callback apply-theme();
+    apply-theme => {
+        Theme.dark = self.dark-active;
+        Palette.color-scheme = self.dark-active ? ColorScheme.dark : ColorScheme.light;
+    }
+
+    callback set-theme(int);
+    callback set-language(int);
+    callback browse-folders();
+    callback browse-files();
+    callback refresh-device();
+    callback transfer();
+    callback cancel-transfer();
+    callback clear-queue();
+    callback remove-queued(int);
+    callback toggle-expanded(int);
+    callback set-checked(int, bool);
+    callback set-all-checked(bool);
+    callback set-all-expanded(bool);
+    callback delete-checked();
+
+    property <string> page: "transfer";
+
+    HorizontalLayout {
+        spacing: 0;
+
+        // ── Sidebar ────────────────────────────────────────────────
+        Rectangle {
+            width: 212px;
+            background: Theme.sidebar;
+
+            VerticalLayout {
+                padding: 14px;
+                spacing: 3px;
+
+                SectionLabel {
+                    text: @tr("MY ZEN");
+                }
+
+                Rectangle {
+                    height: 4px;
+                }
+
+                NavItem {
+                    label: @tr("Music on ZEN");
+                    icon: Icons.music;
+                    selected: page == "music";
+                    clicked => {
+                        page = "music";
+                    }
+                }
+
+                Rectangle {
+                    height: 8px;
+                }
+
+                Divider { }
+
+                Rectangle {
+                    height: 8px;
+                }
+
+                NavItem {
+                    label: @tr("Transfer to ZEN");
+                    icon: Icons.upload;
+                    selected: page == "transfer";
+                    clicked => {
+                        page = "transfer";
+                    }
+                }
+
+                Rectangle {
+                    height: 8px;
+                }
+
+                Divider { }
+
+                Rectangle {
+                    height: 8px;
+                }
+
+                NavItem {
+                    label: @tr("Device info");
+                    icon: Icons.device;
+                    selected: page == "device";
+                    clicked => {
+                        page = "device";
+                    }
+                }
+
+                Rectangle {
+                    vertical-stretch: 1;
+                }
+
+                Divider { }
+
+                Rectangle {
+                    height: 8px;
+                }
+
+                NavItem {
+                    label: @tr("Settings");
+                    icon: Icons.settings;
+                    selected: page == "settings";
+                    clicked => {
+                        page = "settings";
+                    }
+                }
+
+                NavItem {
+                    label: @tr("About");
+                    icon: Icons.about;
+                    selected: page == "about";
+                    clicked => {
+                        page = "about";
+                    }
+                }
+            }
+        }
+
+        Rectangle {
+            width: 1px;
+            background: Theme.line;
+        }
+
+        // ── Main column ────────────────────────────────────────────
+        VerticalLayout {
+            horizontal-stretch: 1;
+            spacing: 0;
+
+            // Header
+            Rectangle {
+                height: 58px;
+                background: Theme.panel;
+
+                HorizontalLayout {
+                    padding-left: Theme.page-pad;
+                    padding-right: Theme.page-pad;
+                    spacing: Theme.gap-m;
+
+                    Text {
+                        text: @tr("ZEN Manager");
+                        font-size: 15px;
+                        font-weight: 700;
+                        color: Theme.text;
+                        vertical-alignment: center;
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    Text {
+                        text: device-connected ? device-name : @tr("No device");
+                        font-size: 12px;
+                        color: Theme.dim;
+                        vertical-alignment: center;
+                        overflow: elide;
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        Rectangle {
+                            width: 9px;
+                            height: 9px;
+                            border-radius: 5px;
+                            background: device-connected ? Theme.ok : Theme.bad;
+                        }
+                    }
+
+                    Text {
+                        text: device-connected ? @tr("Connected") : @tr("Disconnected");
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: device-connected ? Theme.ok : Theme.dim;
+                        vertical-alignment: center;
+                    }
+
+                    VerticalLayout {
+                        alignment: center;
+                        GhostButton {
+                            label: @tr("Refresh");
+                            enabled: !busy;
+                            clicked => {
+                                refresh-device();
+                            }
+                        }
+                    }
+                }
+            }
+
+            Divider { }
+
+            // ── Transfer page ──────────────────────────────────────
+            if page == "transfer": VerticalLayout {
+                padding: Theme.page-pad;
+                spacing: Theme.gap-l;
+
+                Text {
+                    text: @tr("Transfer to ZEN");
+                    font-size: 20px;
+                    font-weight: 400;
+                    letter-spacing: 0.2px;
+                    color: Theme.text;
+                }
+
+                // Drop zone
+                Rectangle {
+                    height: 172px;
+                    border-radius: 10px;
+                    border-width: drop-hover ? 2px : 1px;
+                    border-color: drop-hover ? Theme.accent : Theme.outline;
+                    background: drop-hover ? Theme.drop-tint : Theme.sunken;
+
+                    VerticalLayout {
+                        alignment: center;
+                        spacing: 6px;
+
+                        HorizontalLayout {
+                            alignment: center;
+                            Icon {
+                                path: Icons.plus;
+                                tint: drop-hover ? Theme.accent : Theme.dim;
+                                size: 26px;
+                            }
+                        }
+
+                        Text {
+                            text: drop-hover ? @tr("Release to add") : @tr("Drop music here");
+                            font-size: 13px;
+                            font-weight: 600;
+                            color: drop-hover ? Theme.accent : Theme.text;
+                            horizontal-alignment: center;
+                        }
+
+                        Text {
+                            text: @tr("drop files or whole folders");
+                            font-size: 11px;
+                            color: Theme.dim;
+                            horizontal-alignment: center;
+                        }
+
+                        Rectangle {
+                            height: 4px;
+                        }
+
+                        HorizontalLayout {
+                            alignment: center;
+                            spacing: 8px;
+
+                            GhostButton {
+                                label: @tr("Add folder…");
+                                enabled: !busy;
+                                clicked => {
+                                    browse-folders();
+                                }
+                            }
+
+                            GhostButton {
+                                label: @tr("Add files…");
+                                enabled: !busy;
+                                clicked => {
+                                    browse-files();
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Summary + status
+                HorizontalLayout {
+                    spacing: 10px;
+
+                    Text {
+                        text: queue-summary;
+                        font-size: 12.5px;
+                        color: Theme.text;
+                        vertical-alignment: center;
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    if queue.length > 0 && !busy: GhostButton {
+                        label: @tr("Clear");
+                        clicked => {
+                            clear-queue();
+                        }
+                    }
+                }
+
+                Divider { }
+
+                // Queue list, with the tag inspector beside it.
+                HorizontalLayout {
+                    vertical-stretch: 1;
+                    spacing: 12px;
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+
+                        if queue.length == 0: Text {
+                            text: @tr("Nothing queued yet.");
+                            font-size: 12px;
+                            color: Theme.dim;
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                        }
+
+                        if queue.length > 0: ListView {
+                            for row[i] in queue: Rectangle {
+                                height: Theme.row-height;
+                                background: i == queue-selected
+                                    ? Theme.selected
+                                    : (row-touch.has-hover ? Theme.row-alt : transparent);
+
+                                row-touch := TouchArea { }
+
+                                HorizontalLayout {
+                                    padding-left: 4px;
+                                    padding-right: Theme.gap-m;
+                                    spacing: 10px;
+
+                                    VerticalLayout {
+                                        alignment: center;
+                                        horizontal-stretch: 1;
+                                        spacing: 1px;
+
+                                        Text {
+                                            text: row.name;
+                                            font-size: 12.5px;
+                                            color: row.blocked ? Theme.dim : Theme.text;
+                                            overflow: elide;
+                                            min-width: 0px;
+                                        }
+
+                                        if row.message != "": Text {
+                                            text: row.message;
+                                            font-size: 10.5px;
+                                            color: row.blocked ? Theme.bad : Theme.warn;
+                                            overflow: elide;
+                                            min-width: 0px;
+                                        }
+                                    }
+
+                                    Text {
+                                        text: row.detail;
+                                        font-size: 11.5px;
+                                        color: Theme.dim;
+                                        vertical-alignment: center;
+                                    }
+
+                                    VerticalLayout {
+                                        alignment: center;
+                                        Icon {
+                                            path: row.blocked
+                                                ? Icons.close
+                                                : (row.message == "" ? Icons.check : Icons.about);
+                                            tint: row.blocked
+                                                ? Theme.bad
+                                                : (row.message == "" ? Theme.ok : Theme.warn);
+                                            size: 15px;
+                                        }
+                                    }
+
+                                    VerticalLayout {
+                                        alignment: center;
+                                        GhostButton {
+                                            label: @tr("Check ID3");
+                                            clicked => {
+                                                queue-selected = i == queue-selected ? -1 : i;
+                                            }
+                                        }
+                                    }
+
+                                    if !busy: VerticalLayout {
+                                        alignment: center;
+                                        DangerButton {
+                                            label: @tr("Remove");
+                                            clicked => {
+                                                remove-queued(i);
+                                                queue-selected = -1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Inspector, not a modal: it stays open while you click
+                    // down the list, and never hides the queue or progress.
+                    if queue-selected >= 0 && queue-selected < queue.length: Rectangle {
+                        width: 250px;
+                        border-radius: 8px;
+                        background: Theme.sunken;
+                        border-width: 1px;
+                        border-color: Theme.line;
+
+                        VerticalLayout {
+                            padding: 12px;
+                            spacing: 8px;
+
+                            // Header stays put; only the tags scroll.
+                            HorizontalLayout {
+                                spacing: 6px;
+
+                                Icon {
+                                    path: Icons.tag;
+                                    tint: Theme.dim;
+                                    size: 14px;
+                                    y: 1px;
+                                }
+
+                                Text {
+                                    text: @tr("ID3 tags");
+                                    font-size: 12px;
+                                    font-weight: 700;
+                                    color: Theme.text;
+                                    horizontal-stretch: 1;
+                                }
+
+                                TouchArea {
+                                    width: 16px;
+                                    height: 16px;
+                                    mouse-cursor: pointer;
+                                    clicked => {
+                                        queue-selected = -1;
+                                    }
+                                    Icon {
+                                        path: Icons.close;
+                                        tint: Theme.dim;
+                                        size: 14px;
+                                    }
+                                }
+                            }
+
+                            Rectangle {
+                                height: 1px;
+                                background: Theme.line;
+                            }
+
+                            ScrollView {
+                                vertical-stretch: 1;
+
+                                VerticalLayout {
+                                    spacing: 8px;
+
+                                    TagLine {
+                                        label: @tr("Title");
+                                        value: queue[queue-selected].title;
+                                    }
+
+                                    TagLine {
+                                        label: @tr("Artist");
+                                        value: queue[queue-selected].artist;
+                                    }
+
+                                    TagLine {
+                                        label: @tr("Album");
+                                        value: queue[queue-selected].album;
+                                    }
+
+                                    TagLine {
+                                        label: @tr("Genre");
+                                        value: queue[queue-selected].genre;
+                                    }
+
+                                    TagLine {
+                                        label: @tr("Track");
+                                        value: queue[queue-selected].track_no;
+                                    }
+
+                                    TagLine {
+                                        label: @tr("Length");
+                                        value: queue[queue-selected].duration;
+                                    }
+
+                                    TagLine {
+                                        label: @tr("Size");
+                                        value: queue[queue-selected].detail;
+                                    }
+
+                                    Rectangle {
+                                        vertical-stretch: 1;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Action row
+                HorizontalLayout {
+                    spacing: 10px;
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    PrimaryButton {
+                        label: transferable-count > 0 ? @tr("Transfer {} files", transferable-count) : @tr("Transfer");
+                        enabled: !busy && device-connected && transferable-count > 0;
+                        clicked => {
+                            transfer();
+                        }
+                    }
+                }
+            }
+
+            // ── Music page ─────────────────────────────────────────
+            if page == "music": VerticalLayout {
+                padding: Theme.page-pad;
+                spacing: Theme.gap-l;
+
+                HorizontalLayout {
+                    Text {
+                        text: @tr("Music on ZEN");
+                        font-size: 20px;
+                        font-weight: 400;
+                        letter-spacing: 0.2px;
+                        color: Theme.text;
+                        horizontal-stretch: 1;
+                    }
+
+                    Text {
+                        text: @tr("{} tracks", music-total);
+                        font-size: 12px;
+                        color: Theme.dim;
+                        vertical-alignment: center;
+                    }
+                }
+
+                if music-total > 0: HorizontalLayout {
+                    spacing: 8px;
+
+                    GhostButton {
+                        label: @tr("Expand all");
+                        enabled: !busy;
+                        clicked => {
+                            set-all-expanded(true);
+                        }
+                    }
+
+                    GhostButton {
+                        label: @tr("Collapse all");
+                        enabled: !busy;
+                        clicked => {
+                            set-all-expanded(false);
+                        }
+                    }
+
+                    GhostButton {
+                        label: @tr("Select all");
+                        enabled: !busy;
+                        clicked => {
+                            set-all-checked(true);
+                        }
+                    }
+
+                    GhostButton {
+                        label: @tr("Select none");
+                        enabled: !busy && music-checked > 0;
+                        clicked => {
+                            set-all-checked(false);
+                        }
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+                }
+
+                Divider { }
+
+                Rectangle {
+                    vertical-stretch: 1;
+
+                    if music-total == 0: Text {
+                        text: device-connected ? @tr("No music on the ZEN yet.") : @tr("Connect your ZEN to see what is on it.");
+                        font-size: 12px;
+                        color: Theme.dim;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+
+                    if music-total > 0: ListView {
+                        for row[i] in music-rows: Rectangle {
+                            height: Theme.row-height;
+                            background: tree-touch.has-hover ? Theme.row-alt : transparent;
+
+                            tree-touch := TouchArea {
+                                // Clicking the row body expands, which is the
+                                // common action; the box handles selection.
+                                clicked => {
+                                    if (row.expandable) {
+                                        toggle-expanded(i);
+                                    }
+                                }
+                            }
+
+                            HorizontalLayout {
+                                padding-left: 6px + row.depth * 20px;
+                                // Clears the ListView scrollbar, which would
+                                // otherwise sit on top of the size column.
+                                padding-right: Theme.gap-m;
+                                spacing: 8px;
+
+                                // Chevron, drawn rather than typed so it does
+                                // not depend on the font carrying the glyph.
+                                Rectangle {
+                                    width: 10px;
+
+                                    if row.expandable: Icon {
+                                        path: row.expanded ? Icons.chevron-down : Icons.chevron-right;
+                                        tint: Theme.dim;
+                                        size: 14px;
+                                        y: (parent.height - 14px) / 2;
+                                    }
+                                }
+
+                                // Tri-state box: filled tick when every child is
+                                // selected, a dash when only some are.
+                                Rectangle {
+                                    width: 15px;
+                                    height: 15px;
+                                    y: (parent.height - 15px) / 2;
+                                    border-radius: 3px;
+                                    border-width: 1px;
+                                    border-color: row.check == 0 ? Theme.box-border : Theme.accent;
+                                    background: row.check == 0 ? transparent : Theme.accent;
+
+                                    if row.check == 2: Icon {
+                                        path: Icons.check;
+                                        tint: Theme.on-accent;
+                                        size: 13px;
+                                        x: 1px;
+                                        y: 1px;
+                                    }
+
+                                    if row.check == 1: Rectangle {
+                                        width: 7px;
+                                        height: 2px;
+                                        background: Theme.on-accent;
+                                    }
+
+                                    box-touch := TouchArea {
+                                        clicked => {
+                                            set-checked(i, row.check != 2);
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    text: row.label;
+                                    font-size: row.depth == 0 ? 13px : 12.5px;
+                                    font-weight: row.depth == 0 ? 600 : 400;
+                                    color: Theme.text;
+                                    vertical-alignment: center;
+                                    overflow: elide;
+                                    horizontal-stretch: 1;
+                                    min-width: 0px;
+                                }
+
+                                Text {
+                                    // A track row shows only its size; artist
+                                    // and album rows also count what is under them.
+                                    text: row.track_count == 0
+                                        ? row.size_text
+                                        : (row.track_count == 1
+                                            ? @tr("{} track · {}", row.track_count, row.size_text)
+                                            : @tr("{} tracks · {}", row.track_count, row.size_text));
+                                    font-size: 11px;
+                                    color: Theme.dim;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if music-total > 0: HorizontalLayout {
+                    spacing: 10px;
+
+                    Text {
+                        text: music-checked > 0 ? @tr("{} selected", music-checked) : "";
+                        font-size: 12px;
+                        color: Theme.dim;
+                        vertical-alignment: center;
+                    }
+
+                    Rectangle {
+                        horizontal-stretch: 1;
+                    }
+
+                    DangerButton {
+                        label: music-checked > 0 ? @tr("Delete {} from ZEN", music-checked) : @tr("Delete from ZEN");
+                        enabled: !busy && music-checked > 0;
+                        clicked => {
+                            delete-checked();
+                        }
+                    }
+                }
+            }
+
+            // ── Settings page ──────────────────────────────────────
+            if page == "settings": VerticalLayout {
+                padding: Theme.page-pad;
+                spacing: Theme.gap-l;
+
+                Text {
+                    text: @tr("Settings");
+                    font-size: 20px;
+                    font-weight: 400;
+                    letter-spacing: 0.2px;
+                    color: Theme.text;
+                }
+
+                Divider { }
+
+                VerticalLayout {
+                    alignment: start;
+                    spacing: 22px;
+
+                    VerticalLayout {
+                        spacing: 8px;
+
+                        Text {
+                            text: @tr("Appearance");
+                            font-size: 13px;
+                            font-weight: 700;
+                            color: Theme.text;
+                        }
+
+                        Text {
+                            text: @tr("Automatic follows your system setting.");
+                            font-size: 11.5px;
+                            color: Theme.dim;
+                        }
+
+                        HorizontalLayout {
+                            alignment: start;
+                            spacing: 8px;
+
+                            if theme-mode == 0: PrimaryButton {
+                                label: @tr("Automatic");
+                                clicked => {
+                                    set-theme(0);
+                                }
+                            }
+
+                            if theme-mode != 0: GhostButton {
+                                label: @tr("Automatic");
+                                clicked => {
+                                    set-theme(0);
+                                }
+                            }
+
+                            if theme-mode == 1: PrimaryButton {
+                                label: @tr("Light");
+                                clicked => {
+                                    set-theme(1);
+                                }
+                            }
+
+                            if theme-mode != 1: GhostButton {
+                                label: @tr("Light");
+                                clicked => {
+                                    set-theme(1);
+                                }
+                            }
+
+                            if theme-mode == 2: PrimaryButton {
+                                label: @tr("Dark");
+                                clicked => {
+                                    set-theme(2);
+                                }
+                            }
+
+                            if theme-mode != 2: GhostButton {
+                                label: @tr("Dark");
+                                clicked => {
+                                    set-theme(2);
+                                }
+                            }
+                        }
+                    }
+
+                    VerticalLayout {
+                        spacing: 8px;
+
+                        Text {
+                            text: @tr("Language");
+                            font-size: 13px;
+                            font-weight: 700;
+                            color: Theme.text;
+                        }
+
+                        Text {
+                            text: @tr("Changes apply immediately.");
+                            font-size: 11.5px;
+                            color: Theme.dim;
+                        }
+
+                        HorizontalLayout {
+                            alignment: start;
+                            spacing: 8px;
+
+                            ComboBox {
+                                width: 220px;
+                                model: language-names;
+                                current-index: language-index;
+                                selected => {
+                                    set-language(self.current-index);
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: @tr("Translations are community contributed. See translations/README.md to add your language.");
+                            font-size: 11px;
+                            color: Theme.dim;
+                            wrap: word-wrap;
+                        }
+                    }
+                }
+
+                Rectangle {
+                    vertical-stretch: 1;
+                }
+            }
+
+            // ── Device info page ───────────────────────────────────
+            if page == "device": VerticalLayout {
+                padding: Theme.page-pad;
+                spacing: Theme.gap-l;
+
+                Text {
+                    text: @tr("Device info");
+                    font-size: 20px;
+                    font-weight: 400;
+                    letter-spacing: 0.2px;
+                    color: Theme.text;
+                }
+
+                Divider { }
+
+                Rectangle {
+                    vertical-stretch: 1;
+
+                    if !device-connected: Text {
+                        text: @tr("Connect your ZEN and hit Refresh.");
+                        font-size: 12px;
+                        color: Theme.dim;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+
+                    if device-connected: VerticalLayout {
+                        alignment: start;
+                        spacing: 18px;
+
+                        VerticalLayout {
+                            spacing: 4px;
+
+                            Text {
+                                text: device-connected ? device-name : @tr("No device");
+                                font-size: 15px;
+                                font-weight: 600;
+                                color: Theme.text;
+                            }
+
+                            Text {
+                                text: device-detail == "" ? @tr("Storage") : device-detail;
+                                font-size: 12px;
+                                color: Theme.dim;
+                            }
+
+                            Text {
+                                text: battery-line;
+                                font-size: 12px;
+                                color: Theme.dim;
+                            }
+                        }
+
+                        Text {
+                            text: @tr("Storage");
+                            font-size: 13px;
+                            font-weight: 700;
+                            color: Theme.text;
+                        }
+
+                        HorizontalLayout {
+                            spacing: 22px;
+
+                            // Pie: a full disc of "free", with the used wedge on top.
+                            Rectangle {
+                                width: 150px;
+                                height: 150px;
+
+                                Rectangle {
+                                    width: 150px;
+                                    height: 150px;
+                                    border-radius: 75px;
+                                    background: Theme.pie-track;
+                                }
+
+                                Path {
+                                    width: 150px;
+                                    height: 150px;
+                                    // Without an explicit viewbox Slint fits the
+                                    // wedge's own bounding box to the element,
+                                    // stretching a thin slice across the circle.
+                                    viewbox-x: 0;
+                                    viewbox-y: 0;
+                                    viewbox-width: 100;
+                                    viewbox-height: 100;
+                                    commands: storage-wedge;
+                                    fill: storage-critical ? Theme.danger : Theme.accent;
+                                }
+                            }
+
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 10px;
+
+                                Text {
+                                    text: storage-line;
+                                    font-size: 13px;
+                                    color: Theme.text;
+                                }
+
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    alignment: start;
+
+                                    Rectangle {
+                                        width: 11px;
+                                        height: 11px;
+                                        border-radius: 2px;
+                                        y: 3px;
+                                        background: storage-critical ? Theme.danger : Theme.accent;
+                                    }
+
+                                    Text {
+                                        text: @tr("Used {} ({}%)", storage-used-text, storage-used-percent-text);
+                                        font-size: 12px;
+                                        color: Theme.dim;
+                                    }
+                                }
+
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    alignment: start;
+
+                                    Rectangle {
+                                        width: 11px;
+                                        height: 11px;
+                                        border-radius: 2px;
+                                        y: 3px;
+                                        background: Theme.pie-track;
+                                    }
+
+                                    Text {
+                                        text: @tr("Free {}", storage-free-text);
+                                        font-size: 12px;
+                                        color: Theme.dim;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── About page ─────────────────────────────────────────
+            if page == "about": VerticalLayout {
+                padding: Theme.page-pad;
+                spacing: Theme.gap-l;
+
+                Text {
+                    text: @tr("About");
+                    font-size: 20px;
+                    font-weight: 400;
+                    letter-spacing: 0.2px;
+                    color: Theme.text;
+                }
+
+                Divider { }
+
+                ScrollView {
+                    vertical-stretch: 1;
+
+                VerticalLayout {
+                    alignment: start;
+                    spacing: 16px;
+                    padding-right: Theme.gap-m;
+
+                    HorizontalLayout {
+                        spacing: 14px;
+
+                        // Generated by packaging/make-icons.sh at 2x the display
+                        // size, so it stays sharp on retina.
+                        Image {
+                            source: @image-url("../assets/icons/appIcon.png");
+                            width: 60px;
+                            height: 60px;
+                            image-fit: contain;
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 3px;
+
+                            Text {
+                                text: "ZEN Manager v" + app-version;
+                                font-size: 17px;
+                                font-weight: 700;
+                                color: Theme.text;
+                            }
+
+                            Text {
+                                text: app-codename;
+                                font-size: 11.5px;
+                                color: Theme.faint;
+                                letter-spacing: 0.4px;
+                            }
+
+                            Text {
+                                text: @tr("Modern software for two decade old hardware.");
+                                font-size: 12.5px;
+                                color: Theme.dim;
+                            }
+
+                            Text {
+                                text: "Ivan Pozderac - prototype basement";
+                                font-size: 11.5px;
+                                color: Theme.dim;
+                            }
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                        }
+
+                        VerticalLayout {
+                            alignment: center;
+
+                            // The source paths are white; colorize retints the
+                            // whole mark, so one file serves both themes.
+                            Image {
+                                source: @image-url("../assets/pb_logo.svg");
+                                colorize: Theme.text;
+                                // 784x200 in the viewBox, so height follows width.
+                                width: 168px;
+                                height: 43px;
+                                image-fit: contain;
+                            }
+                        }
+                    }
+
+                    Text {
+                        text: @tr("Free and open source. No accounts, no internet, no tracking.");
+                        font-size: 12.5px;
+                        color: Theme.text;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        text: @tr("Provided as is, with no warranty of any kind. It may not behave correctly on every operating system, computer or device.");
+                        font-size: 12px;
+                        color: Theme.dim;
+                        wrap: word-wrap;
+                    }
+
+                    Text {
+                        text: @tr("This is a hobby project I maintain in my own time. Features and fixes land as I need them myself. I do read what the community asks for, and I take on the requests I think genuinely improve the app, as time allows.");
+                        font-size: 12px;
+                        color: Theme.dim;
+                        wrap: word-wrap;
+                    }
+
+                    Rectangle {
+                        height: Theme.gap-s;
+                    }
+
+                    Rectangle {
+                        height: Theme.gap-s;
+                    }
+
+                       Text {
+                        text: @tr("These libraries and software made ZEN Manager possible");
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: Theme.text;
+                    }
+
+                    // An explicit width, not max-width: a max-width here
+                    // propagates up the layout and caps the whole page.
+                    VerticalLayout {
+                        width: 520px;
+                        spacing: 5px;
+
+                        for c in credits: CreditLine {
+                            name: c.name;
+                            role: c.role;
+                            license: c.license;
+                        }
+                    }
+
+                    Text {
+                        text: @tr("Plus the transitive dependencies these pull in. ZEN Manager itself is MIT-0.");
+                        font-size: 11px;
+                        color: Theme.faint;
+                        wrap: word-wrap;
+                    }
+
+                    Rectangle {
+                        height: Theme.gap-s;
+                    }
+
+                    // Required by the Slint royalty-free licence (section 2a).
+                    // Needs room for its logo plus two lines of version text;
+                    // squeeze it and the version line gets clipped.
+                    HorizontalLayout {
+                        alignment: start;
+                        AboutSlint {
+                            width: 256px;
+                            height: 136px;
+                        }
+                    }
+                }
+                }
+            }
+
+            // ── Persistent status bar ──────────────────────────────
+            // Lives outside the pages so a transfer stays visible while you
+            // browse the device or change settings.
+            if busy: ProgressIndicator {
+                height: 4px;
+                progress: progress;
+            }
+
+            if status != "": Rectangle {
+                height: 38px;
+                background: Theme.panel;
+
+                HorizontalLayout {
+                    padding-left: Theme.page-pad;
+                    padding-right: Theme.page-pad;
+                    spacing: Theme.gap-m;
+
+                    if !busy && transferable-count > 0: VerticalLayout {
+                        alignment: center;
+                        Icon {
+                            path: Icons.check;
+                            tint: Theme.ok;
+                            size: 14px;
+                        }
+                    }
+
+                    Text {
+                        text: status;
+                        font-size: 12px;
+                        color: Theme.dim;
+                        vertical-alignment: center;
+                        overflow: elide;
+                        horizontal-stretch: 1;
+                        min-width: 0px;
+                    }
+
+                    if busy: VerticalLayout {
+                        alignment: center;
+                        DangerButton {
+                            label: @tr("Cancel");
+                            clicked => {
+                                cancel-transfer();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

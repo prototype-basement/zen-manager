@@ -1,0 +1,38 @@
+[package]
+name = "zenmanager"
+version = "1.0.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.104"
+chrono = "0.4.45"
+dirs = "7.0.0"
+libmtp-rs = "0.7.7"
+lofty = "0.25.2"
+rfd = "0.17.2"
+# Slint's defaults also pull in a system tray stack this app never uses.
+# Everything else here is deliberate: renderer-software is the CPU fallback for
+# machines without working OpenGL, so it stays despite costing ~1 MB.
+slint = { version = "1.18.0", default-features = false, features = [
+    "std",
+    "backend-winit",
+    "renderer-femtovg",
+    "renderer-software",
+    "accessibility",
+    "compat-1-2",
+    "unstable-fontique-011",
+    "unstable-winit-030",
+] }
+
+[build-dependencies]
+slint-build = "1.18.0"
+
+# Full debuginfo across this dependency tree costs several GB in target/.
+# Line tables keep backtraces readable at a fraction of the size.
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.release]
+strip = true
+lto = "fat"
+codegen-units = 1

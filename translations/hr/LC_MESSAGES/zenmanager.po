@@ -1,0 +1,288 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: zenmanager\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: hr\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "About"
+msgstr "O aplikaciji"
+
+msgid "Add files…"
+msgstr "Dodaj datoteke…"
+
+msgid "Add folder…"
+msgstr "Dodaj mapu…"
+
+msgid "Album"
+msgstr "Album"
+
+msgid "Appearance"
+msgstr "Izgled"
+
+msgid "Artist"
+msgstr "Izvođač"
+
+msgid "Automatic"
+msgstr "Automatski"
+
+msgid "Automatic follows your system setting."
+msgstr "Automatski prati postavku sustava."
+
+msgid "Battery level unavailable"
+msgstr "Razina baterije nedostupna"
+
+msgid "Battery {}%  ·  device reports {} of {}"
+msgstr "Baterija {}%  ·  uređaj javlja {} od {}"
+
+msgid "Cancel"
+msgstr "Odustani"
+
+msgid "Cancelled after {} of {} tracks."
+msgstr "Prekinuto nakon {} od {} pjesama."
+
+msgid "Changes apply immediately."
+msgstr "Promjene se primjenjuju odmah."
+
+msgid "Check ID3"
+msgstr "Provjeri ID3"
+
+msgid "Clear"
+msgstr "Očisti"
+
+msgid "Collapse all"
+msgstr "Sažmi sve"
+
+msgid "Connect your ZEN and hit Refresh."
+msgstr "Priključi svoj ZEN i klikni Osvježi."
+
+msgid "Connect your ZEN to see what is on it."
+msgstr "Priključi svoj ZEN da vidiš što je na njemu."
+
+msgid "Connected"
+msgstr "Povezan"
+
+msgid "Dark"
+msgstr "Tamna"
+
+msgid "Delete from ZEN"
+msgstr "Obriši sa ZEN-a"
+
+msgid "Delete {} from ZEN"
+msgstr "Obriši {} sa ZEN-a"
+
+msgid "Deleted {} of {} tracks."
+msgstr "Obrisano {} od {} pjesama."
+
+msgid "Deleting {} of {}…"
+msgstr "Brisanje {} od {}…"
+
+msgid "Device info"
+msgstr "Podaci o uređaju"
+
+msgid "Disconnected"
+msgstr "Nije povezan"
+
+msgid "Drop music here"
+msgstr "Ovdje ispusti glazbu"
+
+msgid "Expand all"
+msgstr "Proširi sve"
+
+msgid "Free and open source. No accounts, no internet, no tracking."
+msgstr "Besplatan i otvoren kod. Bez računa, bez interneta, bez praćenja."
+
+msgid "Free {}"
+msgstr "Slobodno {}"
+
+msgid "Genre"
+msgstr "Žanr"
+
+msgid "ID3 tags"
+msgstr "ID3 oznake"
+
+msgid "Language"
+msgstr "Jezik"
+
+msgid "Length"
+msgstr "Trajanje"
+
+msgid "Light"
+msgstr "Svijetla"
+
+msgid "Looking for a device…"
+msgstr "Tražim uređaj…"
+
+msgid "MY ZEN"
+msgstr "MOJ ZEN"
+
+msgid "Modern software for two decade old hardware."
+msgstr "Moderan softver za dva desetljeća star hardver."
+
+msgid "Music on ZEN"
+msgstr "Glazba na ZEN-u"
+
+msgid "No device"
+msgstr "Nema uređaja"
+
+msgid "No device connected."
+msgstr "Nijedan uređaj nije povezan."
+
+msgid "No files queued"
+msgstr "Nema datoteka u redu"
+
+msgid "No music on the ZEN yet."
+msgstr "Još nema glazbe na ZEN-u."
+
+msgid "Nothing queued yet."
+msgstr "Još ništa nije u redu za prijenos."
+
+msgid "On external power"
+msgstr "Na vanjskom napajanju"
+
+msgid "Plus the transitive dependencies these pull in. ZEN Manager itself is MIT-0."
+msgstr "Uz tranzitivne ovisnosti koje one povlače. Sam ZEN Manager je MIT-0."
+
+msgid "Provided as is, with no warranty of any kind. It may not behave correctly on every operating system, computer or device."
+msgstr "Isporučeno \"kakvo jest\", bez ikakvog jamstva. Možda neće raditi ispravno na svakom operacijskom sustavu, računalu ili uređaju."
+
+msgid "Reading files…"
+msgstr "Čitam datoteke…"
+
+msgid "Ready"
+msgstr "Spremno"
+
+msgid "Ready — {} will be skipped"
+msgstr "Spremno — {} će biti preskočeno"
+
+msgid "Refresh"
+msgstr "Osvježi"
+
+msgid "Release to add"
+msgstr "Otpusti za dodavanje"
+
+msgid "Remove"
+msgstr "Ukloni"
+
+msgid "Rust bindings for libmtp"
+msgstr "Rust veze za libmtp"
+
+msgid "Select all"
+msgstr "Označi sve"
+
+msgid "Select none"
+msgstr "Odznači sve"
+
+msgid "Sending {} of {}: {}"
+msgstr "Šaljem {} od {}: {}"
+
+msgid "Sent {} of {} tracks."
+msgstr "Poslano {} od {} pjesama."
+
+msgid "Settings"
+msgstr "Postavke"
+
+msgid "Size"
+msgstr "Veličina"
+
+msgid "Storage"
+msgstr "Pohrana"
+
+msgid "These libraries and software made ZEN Manager possible"
+msgstr "Ove biblioteke i softver omogućili su ZEN Manager"
+
+msgid "This is a hobby project I maintain in my own time. Features and fixes land as I need them myself. I do read what the community asks for, and I take on the requests I think genuinely improve the app, as time allows."
+msgstr "Ovo je hobi projekt koji održavam u svoje slobodno vrijeme. Značajke i ispravci nastaju kako ih sam trebam. Čitam prijedloge zajednice i prihvaćam one za koje smatram da stvarno poboljšavaju aplikaciju, kada vrijeme dopusti."
+
+msgid "Title"
+msgstr "Naslov"
+
+msgid "Track"
+msgstr "Broj"
+
+msgid "Transfer"
+msgstr "Prenesi"
+
+msgid "Transfer to ZEN"
+msgstr "Prijenos na ZEN"
+
+msgid "Transfer {} files"
+msgstr "Prenesi {} datoteka"
+
+msgid "Translations are community contributed. See translations/README.md to add your language."
+msgstr "Prijevode doprinosi zajednica. Pogledaj translations/README.md za dodavanje svog jezika."
+
+msgid "Used {} ({}%)"
+msgstr "Zauzeto {} ({}%)"
+
+msgid "ZEN Manager"
+msgstr "ZEN Manager"
+
+msgid "bundled fonts"
+msgstr "ugrađeni fontovi"
+
+msgid "dates and times"
+msgstr "datumi i vrijeme"
+
+msgid "drop files or whole folders"
+msgstr "ispusti datoteke ili cijele mape"
+
+msgid "error handling"
+msgstr "rukovanje greškama"
+
+msgid "finding the config directory"
+msgstr "pronalaženje mape s postavkama"
+
+msgid "icons"
+msgstr "ikone"
+
+msgid "language and toolchain"
+msgstr "jezik i alati"
+
+msgid "native file dialogs"
+msgstr "izvorni dijalozi za datoteke"
+
+msgid "reading audio tags"
+msgstr "čitanje audio oznaka"
+
+msgid "talking to the device"
+msgstr "komunikacija s uređajem"
+
+msgid "user interface"
+msgstr "korisničko sučelje"
+
+msgid "windowing and file drops"
+msgstr "prozori i ispuštanje datoteka"
+
+msgid "{} cannot be sent"
+msgstr "{} se ne može poslati"
+
+msgid "{} failed"
+msgstr "{} neuspješno"
+
+msgid "{} file · {}"
+msgstr "{} datoteka · {}"
+
+msgid "{} files · {}"
+msgstr "{} datoteka · {}"
+
+msgid "{} free of {}"
+msgstr "{} slobodno od {}"
+
+msgid "{} selected"
+msgstr "odabrano: {}"
+
+msgid "{} track · {}"
+msgstr "{} pjesma · {}"
+
+msgid "{} tracks"
+msgstr "{} pjesama"
+
+msgid "{} tracks on the device."
+msgstr "{} pjesama na uređaju."
+
+msgid "{} tracks · {}"
+msgstr "{} pjesama · {}"

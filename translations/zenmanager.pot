@@ -1,0 +1,288 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: zenmanager\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "About"
+msgstr ""
+
+msgid "Add files…"
+msgstr ""
+
+msgid "Add folder…"
+msgstr ""
+
+msgid "Album"
+msgstr ""
+
+msgid "Appearance"
+msgstr ""
+
+msgid "Artist"
+msgstr ""
+
+msgid "Automatic"
+msgstr ""
+
+msgid "Automatic follows your system setting."
+msgstr ""
+
+msgid "Battery level unavailable"
+msgstr ""
+
+msgid "Battery {}%  ·  device reports {} of {}"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Cancelled after {} of {} tracks."
+msgstr ""
+
+msgid "Changes apply immediately."
+msgstr ""
+
+msgid "Check ID3"
+msgstr ""
+
+msgid "Clear"
+msgstr ""
+
+msgid "Collapse all"
+msgstr ""
+
+msgid "Connect your ZEN and hit Refresh."
+msgstr ""
+
+msgid "Connect your ZEN to see what is on it."
+msgstr ""
+
+msgid "Connected"
+msgstr ""
+
+msgid "Dark"
+msgstr ""
+
+msgid "Delete from ZEN"
+msgstr ""
+
+msgid "Delete {} from ZEN"
+msgstr ""
+
+msgid "Deleted {} of {} tracks."
+msgstr ""
+
+msgid "Deleting {} of {}…"
+msgstr ""
+
+msgid "Device info"
+msgstr ""
+
+msgid "Disconnected"
+msgstr ""
+
+msgid "Drop music here"
+msgstr ""
+
+msgid "Expand all"
+msgstr ""
+
+msgid "Free and open source. No accounts, no internet, no tracking."
+msgstr ""
+
+msgid "Free {}"
+msgstr ""
+
+msgid "Genre"
+msgstr ""
+
+msgid "ID3 tags"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Length"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+msgid "Looking for a device…"
+msgstr ""
+
+msgid "MY ZEN"
+msgstr ""
+
+msgid "Modern software for two decade old hardware."
+msgstr ""
+
+msgid "Music on ZEN"
+msgstr ""
+
+msgid "No device"
+msgstr ""
+
+msgid "No device connected."
+msgstr ""
+
+msgid "No files queued"
+msgstr ""
+
+msgid "No music on the ZEN yet."
+msgstr ""
+
+msgid "Nothing queued yet."
+msgstr ""
+
+msgid "On external power"
+msgstr ""
+
+msgid "Plus the transitive dependencies these pull in. ZEN Manager itself is MIT-0."
+msgstr ""
+
+msgid "Provided as is, with no warranty of any kind. It may not behave correctly on every operating system, computer or device."
+msgstr ""
+
+msgid "Reading files…"
+msgstr ""
+
+msgid "Ready"
+msgstr ""
+
+msgid "Ready — {} will be skipped"
+msgstr ""
+
+msgid "Refresh"
+msgstr ""
+
+msgid "Release to add"
+msgstr ""
+
+msgid "Remove"
+msgstr ""
+
+msgid "Rust bindings for libmtp"
+msgstr ""
+
+msgid "Select all"
+msgstr ""
+
+msgid "Select none"
+msgstr ""
+
+msgid "Sending {} of {}: {}"
+msgstr ""
+
+msgid "Sent {} of {} tracks."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Size"
+msgstr ""
+
+msgid "Storage"
+msgstr ""
+
+msgid "These libraries and software made ZEN Manager possible"
+msgstr ""
+
+msgid "This is a hobby project I maintain in my own time. Features and fixes land as I need them myself. I do read what the community asks for, and I take on the requests I think genuinely improve the app, as time allows."
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Track"
+msgstr ""
+
+msgid "Transfer"
+msgstr ""
+
+msgid "Transfer to ZEN"
+msgstr ""
+
+msgid "Transfer {} files"
+msgstr ""
+
+msgid "Translations are community contributed. See translations/README.md to add your language."
+msgstr ""
+
+msgid "Used {} ({}%)"
+msgstr ""
+
+msgid "ZEN Manager"
+msgstr ""
+
+msgid "bundled fonts"
+msgstr ""
+
+msgid "dates and times"
+msgstr ""
+
+msgid "drop files or whole folders"
+msgstr ""
+
+msgid "error handling"
+msgstr ""
+
+msgid "finding the config directory"
+msgstr ""
+
+msgid "icons"
+msgstr ""
+
+msgid "language and toolchain"
+msgstr ""
+
+msgid "native file dialogs"
+msgstr ""
+
+msgid "reading audio tags"
+msgstr ""
+
+msgid "talking to the device"
+msgstr ""
+
+msgid "user interface"
+msgstr ""
+
+msgid "windowing and file drops"
+msgstr ""
+
+msgid "{} cannot be sent"
+msgstr ""
+
+msgid "{} failed"
+msgstr ""
+
+msgid "{} file · {}"
+msgstr ""
+
+msgid "{} files · {}"
+msgstr ""
+
+msgid "{} free of {}"
+msgstr ""
+
+msgid "{} selected"
+msgstr ""
+
+msgid "{} track · {}"
+msgstr ""
+
+msgid "{} tracks"
+msgstr ""
+
+msgid "{} tracks on the device."
+msgstr ""
+
+msgid "{} tracks · {}"
+msgstr ""

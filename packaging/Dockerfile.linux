@@ -1,0 +1,38 @@
+# Linux builds happen inside the target's own distro rather than being
+# cross-compiled from macOS.
+#
+# Slint's Linux build needs fontconfig, X11, Wayland and GL development
+# packages on top of libmtp. Assembling a cross sysroot with all of those on a
+# Mac is a long afternoon; a container gets them from apt in one line, and the
+# build is a native one, so pkg-config just works with no cross flags.
+#
+# Bullseye on purpose: a binary links against the glibc it was built with, and
+# glibc is forward- but not backward-compatible. Building on an old base means
+# the result runs on newer distros too. Building on a new one does not.
+FROM debian:bullseye
+
+ARG RUST_VERSION=stable
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        ca-certificates \
+        curl \
+        pkg-config \
+        libmtp-dev \
+        libfontconfig-dev \
+        libxkbcommon-dev \
+        libxcb1-dev \
+        libx11-dev \
+        libxcursor-dev \
+        libxrandr-dev \
+        libxi-dev \
+        libgl1-mesa-dev \
+        libwayland-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+        | sh -s -- -y --default-toolchain "$RUST_VERSION" --profile minimal
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+WORKDIR /src
+CMD ["./packaging/linux-package.sh"]

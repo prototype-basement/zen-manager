@@ -1,0 +1,48 @@
+// Icons from Lucide (https://lucide.dev), ISC licensed.
+// Generated from the source SVGs as path data, so rendering never depends
+// on a font carrying the glyph.
+//
+// Two things matter when regenerating: each source path's leading relative
+// moveto must be made absolute (otherwise concatenated subpaths land in the
+// wrong place), and <circle> elements must be rewritten as arc pairs.
+export global Icons {
+    out property <string> music: "M9 18V5l12-2v13 M 3.0 18.0 A 3.0 3.0 0 1 0 9.0 18.0 A 3.0 3.0 0 1 0 3.0 18.0 Z M 15.0 16.0 A 3.0 3.0 0 1 0 21.0 16.0 A 3.0 3.0 0 1 0 15.0 16.0 Z";
+    out property <string> upload: "M12 3v12 M 0 0 m17 8-5-5-5 5 M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4";
+    out property <string> device: "M10 16h.01 M2.212 11.577a2 2 0 0 0-.212.896V18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5.527a2 2 0 0 0-.212-.896L18.55 5.11A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z M21.946 12.013H2.054 M6 16h.01";
+    out property <string> settings: "M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915 M 9.0 12.0 A 3.0 3.0 0 1 0 15.0 12.0 A 3.0 3.0 0 1 0 9.0 12.0 Z";
+    out property <string> about: "M12 16v-4 M12 8h.01 M 2.0 12.0 A 10.0 10.0 0 1 0 22.0 12.0 A 10.0 10.0 0 1 0 2.0 12.0 Z";
+    out property <string> tag: "M12 16v-4 M12 8h.01 M 2.0 12.0 A 10.0 10.0 0 1 0 22.0 12.0 A 10.0 10.0 0 1 0 2.0 12.0 Z";
+    out property <string> chevron-right: "M 0 0 m9 18 6-6-6-6";
+    out property <string> chevron-down: "M 0 0 m6 9 6 6 6-6";
+    out property <string> check: "M20 6 9 17l-5-5";
+    out property <string> plus: "M5 12h14 M12 5v14";
+    out property <string> close: "M18 6 6 18 M 0 0 m6 6 12 12";
+    out property <string> trash: "M10 11v6 M14 11v6 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6 M3 6h18 M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2";
+    out property <string> folder: "M 0 0 m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2";
+}
+
+export component Icon inherits Rectangle {
+    in property <string> path;
+    in property <brush> tint;
+    in property <length> size: 16px;
+
+    width: size;
+    height: size;
+
+    Path {
+        width: root.size;
+        height: root.size;
+        // Pinning the viewbox is required: without it Slint fits each icon's
+        // own bounding box, so icons render at inconsistent scales.
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        commands: root.path;
+        fill: transparent;
+        stroke: root.tint;
+        stroke-width: root.size / 12;
+        stroke-line-cap: round;
+        stroke-line-join: round;
+    }
+}

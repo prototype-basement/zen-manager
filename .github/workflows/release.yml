@@ -1,0 +1,126 @@
+name: Build packages
+
+# Tag a release to publish, or run manually to check the matrix still builds.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+# A re-tag supersedes the run it replaces instead of racing it.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.label }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Native runners per architecture: libmtp is a C library, so
+          # cross-compiling would mean cross-building it too.
+          - label: macOS arm64
+            runner: macos-14
+            os: macos
+          - label: macOS x86_64
+            runner: macos-13
+            os: macos
+          # Oldest supported Ubuntu, because the binary links against the
+          # glibc of whatever built it and newer glibc is not backwards
+          # compatible.
+          - label: Linux x86_64
+            runner: ubuntu-22.04
+            os: linux
+          - label: Linux arm64
+            runner: ubuntu-22.04-arm
+            os: linux
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install build dependencies (macOS)
+        if: matrix.os == 'macos'
+        run: brew install libmtp
+
+      - name: Install build dependencies (Linux)
+        if: matrix.os == 'linux'
+        run: |
+          sudo apt-get update
+          # libmtp for the device, the rest are what Slint's renderer and
+          # winit need to build on Linux.
+          sudo apt-get install -y --no-install-recommends \
+            libmtp-dev \
+            libfontconfig-1-dev \
+            libxkbcommon-dev \
+            libxcb1-dev \
+            libx11-dev \
+            libxcursor-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libgl1-mesa-dev \
+            libwayland-dev \
+            pkg-config
+
+      - name: Test
+        run: cargo test --release --locked
+
+      - name: Package (macOS)
+        if: matrix.os == 'macos'
+        run: |
+          chmod +x packaging/macos-bundle.sh
+          ./packaging/macos-bundle.sh
+          cd target/release/bundle
+          # ditto preserves the bundle's symlinks and permissions; zip does not.
+          ditto -c -k --keepParent "ZEN Manager.app" \
+            "../../../zen-manager-macos-$(uname -m).zip"
+
+      - name: Package (Linux)
+        if: matrix.os == 'linux'
+        run: |
+          chmod +x packaging/linux-package.sh
+          ./packaging/linux-package.sh
+          cp target/release/package/*.tar.gz .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zen-manager-${{ matrix.os }}-${{ matrix.label }}
+          path: |
+            *.zip
+            *.tar.gz
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.zip
+            *.tar.gz
+          generate_release_notes: true
+          body: |
+            ## Install
+
+            **macOS** — unzip and drag to Applications. The build is unsigned,
+            so the first launch needs right-click → Open, or
+            `xattr -dr com.apple.quarantine "ZEN Manager.app"`.
+            libmtp is bundled; nothing else to install.
+
+            **Linux** — extract and run `./install.sh`. Needs libmtp from your
+            distro, which also installs the udev rules that let a normal user
+            access the player.
