@@ -1,13 +1,16 @@
 [package]
 name = "zenmanager"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 
 [dependencies]
 anyhow = "1.0.104"
 chrono = "0.4.45"
 dirs = "7.0.0"
-libmtp-rs = "0.7.7"
+# Pinned exactly: src/mtp.rs reads MtpDevice's raw pointer, which relies on this
+# version's layout. Revisit that code before bumping either of these.
+libmtp-rs = "=0.7.7"
+libmtp-sys = "=1.1.17-5"
 lofty = "0.25.2"
 rfd = "0.17.2"
 # Slint's defaults also pull in a system tray stack this app never uses.

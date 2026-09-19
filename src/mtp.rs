@@ -63,6 +63,34 @@ pub struct Zen {
     device: MtpDevice,
 }
 
+// `raw_device` below reads MtpDevice's only field through a pointer cast. That
+// is sound only while the struct is exactly one device pointer: with the sizes
+// equal, the field has nowhere to sit but offset zero. This fails the build if
+// a libmtp-rs update ever changes that.
+const _: () = assert!(
+    std::mem::size_of::<MtpDevice>() == std::mem::size_of::<*mut libmtp_sys::LIBMTP_mtpdevice_t>()
+);
+
+/// Copies a C string owned by libmtp, treating null as empty.
+///
+/// # Safety
+/// `ptr` must be null or a valid NUL-terminated string.
+unsafe fn c_string(ptr: *const std::os::raw::c_char) -> String {
+    if ptr.is_null() {
+        String::new()
+    } else {
+        unsafe { std::ffi::CStr::from_ptr(ptr) }.to_string_lossy().into_owned()
+    }
+}
+
+/// Title, artist and album for one object, read in a single round trip.
+#[derive(Default)]
+struct TrackTags {
+    title: String,
+    artist: String,
+    album: String,
+}
+
 fn filetype_for(path: &Path) -> Filetype {
     match path
         .extension()
@@ -193,6 +221,38 @@ impl Zen {
         out
     }
 
+    fn raw_device(&self) -> *mut libmtp_sys::LIBMTP_mtpdevice_t {
+        // See the size assertion above for why this cast is sound.
+        unsafe { *(&self.device as *const MtpDevice as *const *mut libmtp_sys::LIBMTP_mtpdevice_t) }
+    }
+
+    /// Reads an object's tags through libmtp's track API.
+    ///
+    /// Not `LIBMTP_Get_String_From_Object`: before libmtp 1.1.20 that function
+    /// sent the device libmtp's own property enum instead of the MTP property
+    /// code, so every text read came back empty and silently. Ubuntu 22.04 and
+    /// Debian 11 still ship 1.1.19, which showed every track as "unknown
+    /// artist". The track API always used the right codes, and fetches all
+    /// three fields at once instead of one USB round trip each.
+    ///
+    /// Returns empty tags for objects the device does not class as tracks,
+    /// which is how libmtp answers for files copied on by other software.
+    fn track_tags(&self, id: u32) -> TrackTags {
+        let track = unsafe { libmtp_sys::LIBMTP_Get_Trackmetadata(self.raw_device(), id) };
+        if track.is_null() {
+            return TrackTags::default();
+        }
+        let tags = unsafe {
+            TrackTags {
+                title: c_string((*track).title),
+                artist: c_string((*track).artist),
+                album: c_string((*track).album),
+            }
+        };
+        unsafe { libmtp_sys::LIBMTP_destroy_track_t(track) };
+        tags
+    }
+
     pub fn list_music(&mut self) -> Result<Vec<DeviceTrack>> {
         self.device
             .update_storage(StorageSort::ByFreeSpace)
@@ -218,16 +278,15 @@ impl Zen {
                         stack.push((Parent::Folder(file.id()), depth + 1));
                     }
                 } else if is_audio_object(&ftype, file.name()) {
-                    // One USB round trip per property, so this is the slow part
-                    // of a refresh. A device that does not support a property
-                    // just yields an empty string.
+                    // The slow part of a refresh: one USB round trip per track.
+                    let tags = self.track_tags(file.id());
                     out.push(DeviceTrack {
                         id: file.id(),
                         name: file.name().to_string(),
                         size: file.size(),
-                        title: file.get_string(Property::Name).unwrap_or_default(),
-                        artist: file.get_string(Property::Artist).unwrap_or_default(),
-                        album: file.get_string(Property::AlbumName).unwrap_or_default(),
+                        title: tags.title,
+                        artist: tags.artist,
+                        album: tags.album,
                     });
                 }
             }

@@ -128,8 +128,11 @@ Croatian.
 - **CJK uses your system fonts.** Latin, Greek, Cyrillic, Arabic and Hebrew are
   bundled; CJK fonts are tens of megabytes each and every desktop already has
   them.
-- **Refreshing is slow with a full device.** Artist and album are read one MTP
-  property at a time, which is several round trips per track.
+- **Refreshing takes a while with a full device.** Tags are read one track at a
+  time, one USB round trip each.
+- **On Linux, the file manager may grab the Zen first.** Most desktops open MTP
+  devices automatically, which leaves ZEN Manager reporting the device as busy.
+  Eject it in the file manager, then open ZEN Manager.
 - **No Windows build.** Slint and Rust would manage it, but libmtp on Windows
   and its driver situation are their own project. Nothing here is packaged or
   tested for it.
