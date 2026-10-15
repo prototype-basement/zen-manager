@@ -188,52 +188,33 @@ building on an old base is what lets the result run on newer distros.
 
 ## Releasing
 
-Releases are built by CI, not on a developer machine:
+Work on a branch, open a pull request against `main`, and **include the version
+bump in that PR**. Merging it publishes the release:
 
-```sh
-git tag v1.0.0
-git push origin v1.0.0
-```
+1. Bump `version` in `Cargo.toml`.
+2. Write `docs/releases/v<version>.md`.
+3. Open the PR. CI builds and tests it on Linux.
+4. Merge. CI sees a version with no tag yet, so it builds all four packages,
+   tags the commit, and publishes a GitHub release with those notes.
 
-That runs the matrix in
-[.github/workflows/release.yml](.github/workflows/release.yml) — four native
-runners, one per target — and attaches all four packages to a GitHub release.
-Nothing is built or uploaded by hand.
+Nothing is tagged or uploaded by hand. A commit to `main` that does not change
+the version builds nothing, so docs and fixes between releases cost no CI time.
 
-`workflow_dispatch` runs the same matrix without publishing, which is the way to
-check a build before committing to a tag.
+Re-releasing the same version is refused by design: once `v1.1.0` is tagged,
+further commits need a new version number to publish.
 
-Release notes are written by hand in `docs/releases/<tag>.md` — for example
-`docs/releases/v1.0.1.md` — and committed before tagging, so they are reviewed
-like any other change. CI appends the shared install instructions from
-`docs/releases/install.md`. With no notes file, the release gets only those.
+`workflow_dispatch` ("Run workflow" in the Actions tab) builds all four
+packages without publishing, to check a build before committing to a release.
+
+Version lives in one place, `Cargo.toml`. The About screen reads it from
+`CARGO_PKG_VERSION`, so it cannot drift from the tag. The release codename is a
+const in `src/main.rs`.
 
 The macOS jobs build libusb and libmtp from source (`packaging/macos-deps.sh`)
 rather than using Homebrew. Homebrew's libraries require the macOS version of
 the machine that built them, which would stop the app launching on anything
 older than the CI runner. Building from source keeps the minimum at macOS 11,
 and CI fails if anything in the bundle asks for more.
-
-Version lives in one place, `Cargo.toml`. The About screen reads it from
-`CARGO_PKG_VERSION`, so it cannot drift from the tag. The release codename is a
-const in `src/main.rs`.
-
-## Maybe one day
-
-Not promises — just the things worth doing next, roughly in the order they make
-sense. Each is grounded in something the device already reports as supported.
-
-- **Playlists** — create, edit, delete and transfer them. The Zen Micro lists
-  `Playlist` among its supported filetypes, so this is the most useful of the
-  three and the obvious next step for a music player.
-- **Device settings** — read and change what the player exposes, starting with
-  the owner's name. Already confirmed working: the friendly name reads back over
-  MTP, and libmtp can write it.
-- **Contacts and calendar** — the device reports `VCard3` and `VCalendar2`
-  support, which is its Organizer feature. Needs investigation into how the Zen
-  actually stores and displays them before anything is built.
-- **Translatable error messages** — the interface is fully translatable, but
-  text coming from libmtp is still English.
 
 ## Licence
 
