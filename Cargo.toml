@@ -1,6 +1,6 @@
 [package]
 name = "zenmanager"
-version = "1.0.1"
+version = "1.1.0"
 edition = "2024"
 
 [dependencies]
@@ -11,12 +11,16 @@ dirs = "7.0.0"
 # version's layout. Revisit that code before bumping either of these.
 libmtp-rs = "=0.7.7"
 libmtp-sys = "=1.1.17-5"
+libc = "0.2"
 lofty = "0.25.2"
 rfd = "0.17.2"
+# Pinned exactly: src/main.rs builds a drag payload with
+# slint::private_unstable_api::DataTransfer, which carries no stability promise.
+#
 # Slint's defaults also pull in a system tray stack this app never uses.
 # Everything else here is deliberate: renderer-software is the CPU fallback for
 # machines without working OpenGL, so it stays despite costing ~1 MB.
-slint = { version = "1.18.0", default-features = false, features = [
+slint = { version = "=1.18.0", default-features = false, features = [
     "std",
     "backend-winit",
     "renderer-femtovg",

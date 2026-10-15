@@ -70,7 +70,7 @@ command -v gtk-update-icon-cache > /dev/null && \
 echo "Installed to ~/.local/bin/zen-manager"
 echo
 echo "This needs libmtp at runtime. If the app reports no device, install it:"
-echo "  Debian/Ubuntu : sudo apt install libmtp9 libmtp-runtime"
+echo "  Debian/Ubuntu : sudo apt install libmtp-runtime"
 echo "  Fedora        : sudo dnf install libmtp"
 echo "  Arch          : sudo pacman -S libmtp"
 echo

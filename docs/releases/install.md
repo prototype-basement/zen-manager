@@ -8,7 +8,7 @@ app and choose **Open**. libmtp is bundled; there is nothing else to install.
 `~/.local` and needs no root. You also need libmtp from your distribution:
 
 ```sh
-sudo apt install libmtp9 libmtp-runtime   # Debian / Ubuntu
+sudo apt install libmtp-runtime           # Debian / Ubuntu
 sudo dnf install libmtp                   # Fedora
 sudo pacman -S libmtp                     # Arch
 ```

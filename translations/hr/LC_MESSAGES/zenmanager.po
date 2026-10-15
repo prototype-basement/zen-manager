@@ -17,6 +17,18 @@ msgstr "Dodaj datoteke…"
 msgid "Add folder…"
 msgstr "Dodaj mapu…"
 
+msgid "Add tracks"
+msgstr "Dodaj pjesme"
+
+msgid "Add tracks…"
+msgstr "Dodaj pjesme…"
+
+msgid "Add {} tracks"
+msgstr "Dodaj {} pjesama"
+
+msgid "Added {} tracks to {}."
+msgstr "Dodano {} pjesama u {}."
+
 msgid "Album"
 msgstr "Album"
 
@@ -65,14 +77,23 @@ msgstr "Priključi svoj ZEN da vidiš što je na njemu."
 msgid "Connected"
 msgstr "Povezan"
 
+msgid "Could not save the playlist."
+msgstr "Nije moguće spremiti popis."
+
 msgid "Dark"
 msgstr "Tamna"
+
+msgid "Delete"
+msgstr "Obriši"
 
 msgid "Delete from ZEN"
 msgstr "Obriši sa ZEN-a"
 
 msgid "Delete {} from ZEN"
 msgstr "Obriši {} sa ZEN-a"
+
+msgid "Deleted playlist {}."
+msgstr "Obrisan popis {}."
 
 msgid "Deleted {} of {} tracks."
 msgstr "Obrisano {} od {} pjesama."
@@ -82,6 +103,9 @@ msgstr "Brisanje {} od {}…"
 
 msgid "Device info"
 msgstr "Podaci o uređaju"
+
+msgid "Discard"
+msgstr "Odbaci"
 
 msgid "Disconnected"
 msgstr "Nije povezan"
@@ -125,6 +149,9 @@ msgstr "Moderan softver za dva desetljeća star hardver."
 msgid "Music on ZEN"
 msgstr "Glazba na ZEN-u"
 
+msgid "New playlist"
+msgstr "Novi popis"
+
 msgid "No device"
 msgstr "Nema uređaja"
 
@@ -137,11 +164,26 @@ msgstr "Nema datoteka u redu"
 msgid "No music on the ZEN yet."
 msgstr "Još nema glazbe na ZEN-u."
 
+msgid "No playlists on the ZEN yet."
+msgstr "Još nema popisa na ZEN-u."
+
+msgid "No tracks yet. Use Add tracks to pick from the device."
+msgstr "Još nema pjesama. Dodaj pjesme s uređaja pomoću Dodaj pjesme."
+
+msgid "Not in the music list"
+msgstr "Nije na popisu glazbe"
+
 msgid "Nothing queued yet."
 msgstr "Još ništa nije u redu za prijenos."
 
 msgid "On external power"
 msgstr "Na vanjskom napajanju"
+
+msgid "Playlist name"
+msgstr "Naziv popisa"
+
+msgid "Playlists"
+msgstr "Popisi pjesama"
 
 msgid "Plus the transitive dependencies these pull in. ZEN Manager itself is MIT-0."
 msgstr "Uz tranzitivne ovisnosti koje one povlače. Sam ZEN Manager je MIT-0."
@@ -170,6 +212,15 @@ msgstr "Ukloni"
 msgid "Rust bindings for libmtp"
 msgstr "Rust veze za libmtp"
 
+msgid "Save"
+msgstr "Spremi"
+
+msgid "Saved {}."
+msgstr "Spremljeno {}."
+
+msgid "Select a playlist, or create a new one."
+msgstr "Odaberi popis ili izradi novi."
+
 msgid "Select all"
 msgstr "Označi sve"
 
@@ -196,6 +247,9 @@ msgstr "Ove biblioteke i softver omogućili su ZEN Manager"
 
 msgid "This is a hobby project I maintain in my own time. Features and fixes land as I need them myself. I do read what the community asks for, and I take on the requests I think genuinely improve the app, as time allows."
 msgstr "Ovo je hobi projekt koji održavam u svoje slobodno vrijeme. Značajke i ispravci nastaju kako ih sam trebam. Čitam prijedloge zajednice i prihvaćam one za koje smatram da stvarno poboljšavaju aplikaciju, kada vrijeme dopusti."
+
+msgid "Tick an artist or album to add everything under it."
+msgstr "Označi izvođača ili album da dodaš sve iz njega."
 
 msgid "Title"
 msgstr "Naslov"
@@ -274,6 +328,9 @@ msgstr "{} slobodno od {}"
 
 msgid "{} selected"
 msgstr "odabrano: {}"
+
+msgid "{} track"
+msgstr "{} pjesma"
 
 msgid "{} track · {}"
 msgstr "{} pjesma · {}"

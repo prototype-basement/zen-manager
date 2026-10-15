@@ -3,6 +3,7 @@
 mod fonts;
 mod library;
 mod music;
+mod playlists;
 mod mtp;
 mod queue;
 mod settings;
@@ -19,7 +20,7 @@ use worker::Command;
 slint::include_modules!();
 
 /// Release codename. Bumped alongside the major version, not per patch.
-const CODENAME: &str = "Awakening";
+const CODENAME: &str = "Balance";
 
 fn main() -> Result<(), slint::PlatformError> {
     // Both must happen before the window exists: fonts so the first frame is
@@ -169,6 +170,86 @@ fn main() -> Result<(), slint::PlatformError> {
         let tx = handle.sender();
         move || {
             let _ = tx.send(Command::DeleteChecked);
+        }
+    });
+
+    ui.on_refresh_playlists({
+        let tx = handle.sender();
+        move || {
+            let _ = tx.send(Command::RefreshPlaylists);
+        }
+    });
+
+    ui.on_select_playlist({
+        let tx = handle.sender();
+        move |index| {
+            let _ = tx.send(Command::SelectPlaylist(index.max(0) as usize));
+        }
+    });
+
+    ui.on_new_playlist({
+        let tx = handle.sender();
+        move || {
+            let _ = tx.send(Command::NewPlaylist);
+        }
+    });
+
+    ui.on_delete_playlist({
+        let tx = handle.sender();
+        move || {
+            let _ = tx.send(Command::DeletePlaylist);
+        }
+    });
+
+    ui.on_add_checked_to_draft({
+        let tx = handle.sender();
+        move || {
+            let _ = tx.send(Command::AddCheckedToDraft);
+        }
+    });
+
+    ui.on_remove_playlist_track({
+        let tx = handle.sender();
+        move |index| {
+            let _ = tx.send(Command::RemoveTrackFromPlaylist(index.max(0) as usize));
+        }
+    });
+
+    ui.on_move_playlist_track({
+        let tx = handle.sender();
+        move |index, delta| {
+            let _ = tx.send(Command::MoveTrackInPlaylist(index.max(0) as usize, delta));
+        }
+    });
+
+    // Slint refuses to start a drag with an empty payload, and data-transfer
+    // values can only be built here. The content is not read back: the dragged
+    // row records its own index in the UI. DataTransfer still sits behind
+    // slint::private_unstable_api, which is why slint is pinned exactly.
+    ui.on_drag_payload(|index| {
+        let mut data = slint::private_unstable_api::re_exports::DataTransfer::default();
+        data.set_plain_text(index.to_string().into());
+        data
+    });
+
+    ui.on_move_playlist_track_to({
+        let tx = handle.sender();
+        move |from, to| {
+            let _ = tx.send(Command::MoveTrackToPosition(from.max(0) as usize, to.max(0) as usize));
+        }
+    });
+
+    ui.on_save_playlist({
+        let tx = handle.sender();
+        move |name| {
+            let _ = tx.send(Command::SavePlaylist(name.to_string()));
+        }
+    });
+
+    ui.on_discard_playlist_edits({
+        let tx = handle.sender();
+        move || {
+            let _ = tx.send(Command::DiscardPlaylistEdits);
         }
     });
 
