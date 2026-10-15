@@ -253,6 +253,20 @@ impl Zen {
         tags
     }
 
+    pub fn list_playlists(&mut self) -> Vec<crate::playlists::Playlist> {
+        unsafe { crate::playlists::list(self.raw_device()) }
+    }
+
+    pub fn create_playlist(&mut self, name: &str, tracks: &mut [u32]) -> Result<u32> {
+        unsafe { crate::playlists::create(self.raw_device(), name, tracks) }
+            .map_err(|_| anyhow!("The device refused to create the playlist"))
+    }
+
+    pub fn update_playlist(&mut self, id: u32, name: &str, tracks: &mut [u32]) -> Result<()> {
+        unsafe { crate::playlists::update(self.raw_device(), id, name, tracks) }
+            .map_err(|_| anyhow!("The device refused to save the playlist"))
+    }
+
     pub fn list_music(&mut self) -> Result<Vec<DeviceTrack>> {
         self.device
             .update_storage(StorageSort::ByFreeSpace)

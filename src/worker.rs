@@ -1,7 +1,7 @@
 use crate::music::{CheckState, MusicTree, NodeKind, NodePath};
 use crate::mtp::{Battery, DeviceTrack, Zen, format_bytes};
 use crate::queue::{self, DeviceState, QueuedFile};
-use crate::{AppWindow, MusicRow, QueueRow};
+use crate::{AppWindow, MusicRow, PlaylistRow, PlaylistTrackRow, QueueRow};
 use slint::{ModelRc, VecModel};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -27,6 +27,9 @@ pub mod status {
     pub const DELETED_MANY: i32 = 10;
     pub const TRACKS_ON_DEVICE: i32 = 12;
     pub const NO_DEVICE_CONNECTED: i32 = 13;
+    pub const PLAYLIST_SAVED: i32 = 14;
+    pub const PLAYLIST_DELETED: i32 = 15;
+    pub const PLAYLIST_FAILED: i32 = 16;
 }
 
 pub enum Command {
@@ -40,6 +43,19 @@ pub enum Command {
     SetAllChecked(bool),
     SetAllExpanded(bool),
     DeleteChecked,
+    RefreshPlaylists,
+    SelectPlaylist(usize),
+    NewPlaylist,
+    DeletePlaylist,
+    /// Appends whatever is ticked in the music tree to the playlist being
+    /// edited. Not written to the device until Save.
+    AddCheckedToDraft,
+    RemoveTrackFromPlaylist(usize),
+    MoveTrackInPlaylist(usize, i32),
+    /// Drag-and-drop reorder: take the track at `from` and drop it at `to`.
+    MoveTrackToPosition(usize, usize),
+    SavePlaylist(String),
+    DiscardPlaylistEdits,
 }
 
 pub struct WorkerHandle {
@@ -70,6 +86,11 @@ pub fn spawn(ui: slint::Weak<AppWindow>) -> WorkerHandle {
             queue: Vec::new(),
             device: Vec::new(),
             supported_extensions: Vec::new(),
+            playlists: Vec::new(),
+            selected_playlist: None,
+            draft_name: String::new(),
+            draft_tracks: Vec::new(),
+            draft_is_new: false,
             tree: MusicTree::default(),
             paths: Vec::new(),
             free_space: 0,
@@ -88,6 +109,14 @@ struct Worker {
     queue: Vec<QueuedFile>,
     device: Vec<DeviceTrack>,
     supported_extensions: Vec<String>,
+    playlists: Vec<crate::playlists::Playlist>,
+    /// Index into `playlists`, or none when nothing is selected.
+    selected_playlist: Option<usize>,
+    /// Edits live here until saved, so a half-made playlist never reaches the
+    /// device and Discard can simply drop them.
+    draft_name: String,
+    draft_tracks: Vec<u32>,
+    draft_is_new: bool,
     tree: MusicTree,
     /// Maps each visible row index to its node, rebuilt on every push so the
     /// indices the UI sends back always refer to the rows it is showing.
@@ -232,6 +261,31 @@ impl Worker {
                     self.push_music();
                 }
                 Command::DeleteChecked => self.delete_checked(),
+                Command::RefreshPlaylists => self.refresh_playlists(),
+                Command::SelectPlaylist(index) => self.select_playlist(index),
+                Command::NewPlaylist => self.new_playlist(),
+                Command::DeletePlaylist => self.delete_playlist(),
+                Command::AddCheckedToDraft => self.add_checked_to_draft(),
+                Command::RemoveTrackFromPlaylist(index) => {
+                    if index < self.draft_tracks.len() {
+                        self.draft_tracks.remove(index);
+                        self.push_playlists();
+                    }
+                }
+                Command::MoveTrackInPlaylist(index, delta) => self.move_track(index, delta),
+                Command::MoveTrackToPosition(from, to) => self.move_track_to(from, to),
+                Command::SavePlaylist(name) => self.save_playlist(name),
+                Command::DiscardPlaylistEdits => {
+                    match self.selected_playlist {
+                        Some(index) => self.select_playlist(index),
+                        None => {
+                            self.draft_tracks.clear();
+                            self.draft_name.clear();
+                            self.draft_is_new = false;
+                            self.push_playlists();
+                        }
+                    }
+                }
             }
         }
     }
@@ -383,6 +437,9 @@ impl Worker {
         });
 
         self.rebuild_tree();
+        // Playlists come along with the device listing, so the page is right
+        // whether or not it has been opened yet.
+        self.refresh_playlists();
         let tracks = self.device.len() as i32;
         self.push_queue();
         // Only announce the device listing when nothing more specific is
@@ -563,6 +620,207 @@ impl Worker {
         }
 
         self.refresh_device();
+    }
+
+
+    fn playlist_row(&self, playlist: &crate::playlists::Playlist) -> PlaylistRow {
+        PlaylistRow {
+            name: playlist.name.clone().into(),
+            track_count: playlist.tracks.len() as i32,
+        }
+    }
+
+    /// Looks up a device track by object id for display.
+    fn track_label(&self, id: u32) -> (String, String) {
+        match self.device.iter().find(|t| t.id == id) {
+            Some(track) => {
+                let title = if track.title.trim().is_empty() {
+                    track.name.clone()
+                } else {
+                    track.title.clone()
+                };
+                (title, track.artist.clone())
+            }
+            // The playlist references something not in the music listing, e.g.
+            // a file the device does not class as a track.
+            None => (String::new(), String::new()),
+        }
+    }
+
+    fn push_playlists(&mut self) {
+        let rows: Vec<PlaylistRow> = self
+            .playlists
+            .iter()
+            .map(|p| self.playlist_row(p))
+            .collect();
+
+        let tracks: Vec<PlaylistTrackRow> = self
+            .draft_tracks
+            .iter()
+            .map(|id| {
+                let (title, artist) = self.track_label(*id);
+                PlaylistTrackRow {
+                    title: if title.is_empty() { String::new() } else { title }.into(),
+                    artist: artist.into(),
+                    missing: !self.device.iter().any(|t| t.id == *id),
+                }
+            })
+            .collect();
+
+        let selected = self.selected_playlist.map(|i| i as i32).unwrap_or(-1);
+        let has_draft = self.draft_is_new || self.selected_playlist.is_some();
+        let dirty = match self.selected_playlist {
+            Some(index) => self.playlists[index].tracks != self.draft_tracks,
+            None => self.draft_is_new,
+        };
+        let name = self.draft_name.clone();
+
+        post(&self.ui, move |ui| {
+            ui.set_playlists(ModelRc::new(VecModel::from(rows)));
+            ui.set_playlist_tracks(ModelRc::new(VecModel::from(tracks)));
+            ui.set_playlist_selected(selected);
+            ui.set_playlist_name(name.into());
+            ui.set_playlist_has_draft(has_draft);
+            ui.set_playlist_dirty(dirty);
+        });
+    }
+
+    fn refresh_playlists(&mut self) {
+        let Some(zen) = self.zen.as_mut() else {
+            self.playlists.clear();
+            self.push_playlists();
+            return;
+        };
+        self.playlists = zen.list_playlists();
+
+        // Keep the selection on the same playlist across a refresh where we can.
+        if self.selected_playlist.is_some_and(|i| i >= self.playlists.len()) {
+            self.selected_playlist = None;
+            self.draft_name.clear();
+            self.draft_tracks.clear();
+        }
+        self.push_playlists();
+    }
+
+    fn select_playlist(&mut self, index: usize) {
+        if let Some(playlist) = self.playlists.get(index) {
+            self.selected_playlist = Some(index);
+            self.draft_name = playlist.name.clone();
+            self.draft_tracks = playlist.tracks.clone();
+            self.draft_is_new = false;
+            self.push_playlists();
+        }
+    }
+
+    fn new_playlist(&mut self) {
+        self.selected_playlist = None;
+        self.draft_name = String::new();
+        self.draft_tracks.clear();
+        self.draft_is_new = true;
+        self.push_playlists();
+    }
+
+    fn move_track(&mut self, index: usize, delta: i32) {
+        let target = index as i32 + delta;
+        if index < self.draft_tracks.len() && target >= 0 && (target as usize) < self.draft_tracks.len() {
+            self.draft_tracks.swap(index, target as usize);
+            self.push_playlists();
+        }
+    }
+
+    fn move_track_to(&mut self, from: usize, to: usize) {
+        let len = self.draft_tracks.len();
+        if from >= len || to >= len || from == to {
+            return;
+        }
+        let track = self.draft_tracks.remove(from);
+        self.draft_tracks.insert(to, track);
+        self.push_playlists();
+    }
+
+    fn save_playlist(&mut self, name: String) {
+        let name = if name.trim().is_empty() {
+            "Playlist".to_string()
+        } else {
+            name
+        };
+        self.draft_name = name.clone();
+        let mut tracks = self.draft_tracks.clone();
+
+        let Some(zen) = self.zen.as_mut() else {
+            post_status(&self.ui, status::NO_DEVICE_CONNECTED, 0, 0, String::new(), 0, String::new());
+            return;
+        };
+
+        let result = match self.selected_playlist.and_then(|i| self.playlists.get(i)) {
+            Some(existing) => zen.update_playlist(existing.id, &name, &mut tracks).map(|_| ()),
+            None => zen.create_playlist(&name, &mut tracks).map(|_| ()),
+        };
+
+        match result {
+            Ok(()) => {
+                self.draft_is_new = false;
+                self.refresh_playlists();
+                // Reselect by name, since ids shift when a new one is created.
+                if let Some(index) = self.playlists.iter().position(|p| p.name == name) {
+                    self.select_playlist(index);
+                }
+                post_status(&self.ui, status::PLAYLIST_SAVED, 0, 0, name, 0, String::new());
+            }
+            Err(error) => post_status(
+                &self.ui,
+                status::PLAYLIST_FAILED,
+                0,
+                0,
+                String::new(),
+                0,
+                error.to_string(),
+            ),
+        }
+    }
+
+    fn delete_playlist(&mut self) {
+        let Some(index) = self.selected_playlist else {
+            // Nothing saved yet; just drop the draft.
+            self.new_playlist();
+            self.draft_is_new = false;
+            self.push_playlists();
+            return;
+        };
+        let Some(playlist) = self.playlists.get(index).cloned() else { return };
+        let Some(zen) = self.zen.as_mut() else { return };
+
+        match zen.delete(playlist.id) {
+            Ok(()) => {
+                self.selected_playlist = None;
+                self.draft_name.clear();
+                self.draft_tracks.clear();
+                self.refresh_playlists();
+                post_status(&self.ui, status::PLAYLIST_DELETED, 0, 0, playlist.name, 0, String::new());
+            }
+            Err(error) => post_status(
+                &self.ui,
+                status::PLAYLIST_FAILED,
+                0,
+                0,
+                String::new(),
+                0,
+                error.to_string(),
+            ),
+        }
+    }
+
+    /// Appends the tree's ticked tracks to the draft, skipping ones already in
+    /// it, then clears the ticks so the chooser opens empty next time.
+    fn add_checked_to_draft(&mut self) {
+        for id in self.tree.checked_ids() {
+            if !self.draft_tracks.contains(&id) {
+                self.draft_tracks.push(id);
+            }
+        }
+        self.tree.set_all_checked(false);
+        self.push_music();
+        self.push_playlists();
     }
 
     fn delete_checked(&mut self) {

@@ -66,7 +66,7 @@ the app; nothing else to install.
 needs no root. You do need libmtp from your distro:
 
 ```sh
-sudo apt install libmtp9 libmtp-runtime   # Debian / Ubuntu
+sudo apt install libmtp-runtime           # Debian / Ubuntu
 sudo dnf install libmtp                   # Fedora
 sudo pacman -S libmtp                     # Arch
 ```

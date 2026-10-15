@@ -25,7 +25,7 @@ jobs:
           # Native runners per architecture: libmtp is a C library, so
           # cross-compiling would mean cross-building it too.
           - label: macOS arm64
-            runner: macos-14
+            runner: macos-15
             os: macos
           # macos-13 was retired in December 2025. macos-15-intel is GitHub's
           # last x86_64 macOS image, supported until August 2027.
@@ -96,8 +96,9 @@ jobs:
           done
           cd target/release/bundle
           # ditto preserves the bundle's symlinks and permissions; zip does not.
+          version=$(grep -m1 '^version' ../../../Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
           ditto -c -k --keepParent "ZEN Manager.app" \
-            "../../../zen-manager-macos-$(uname -m).zip"
+            "../../../zen-manager-$version-macos-$(uname -m).zip"
 
       - name: Package (Linux)
         if: matrix.os == 'linux'

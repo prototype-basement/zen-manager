@@ -17,6 +17,18 @@ msgstr ""
 msgid "Add folder…"
 msgstr ""
 
+msgid "Add tracks"
+msgstr ""
+
+msgid "Add tracks…"
+msgstr ""
+
+msgid "Add {} tracks"
+msgstr ""
+
+msgid "Added {} tracks to {}."
+msgstr ""
+
 msgid "Album"
 msgstr ""
 
@@ -65,13 +77,22 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
+msgid "Could not save the playlist."
+msgstr ""
+
 msgid "Dark"
+msgstr ""
+
+msgid "Delete"
 msgstr ""
 
 msgid "Delete from ZEN"
 msgstr ""
 
 msgid "Delete {} from ZEN"
+msgstr ""
+
+msgid "Deleted playlist {}."
 msgstr ""
 
 msgid "Deleted {} of {} tracks."
@@ -81,6 +102,9 @@ msgid "Deleting {} of {}…"
 msgstr ""
 
 msgid "Device info"
+msgstr ""
+
+msgid "Discard"
 msgstr ""
 
 msgid "Disconnected"
@@ -125,6 +149,9 @@ msgstr ""
 msgid "Music on ZEN"
 msgstr ""
 
+msgid "New playlist"
+msgstr ""
+
 msgid "No device"
 msgstr ""
 
@@ -137,10 +164,25 @@ msgstr ""
 msgid "No music on the ZEN yet."
 msgstr ""
 
+msgid "No playlists on the ZEN yet."
+msgstr ""
+
+msgid "No tracks yet. Use Add tracks to pick from the device."
+msgstr ""
+
+msgid "Not in the music list"
+msgstr ""
+
 msgid "Nothing queued yet."
 msgstr ""
 
 msgid "On external power"
+msgstr ""
+
+msgid "Playlist name"
+msgstr ""
+
+msgid "Playlists"
 msgstr ""
 
 msgid "Plus the transitive dependencies these pull in. ZEN Manager itself is MIT-0."
@@ -170,6 +212,15 @@ msgstr ""
 msgid "Rust bindings for libmtp"
 msgstr ""
 
+msgid "Save"
+msgstr ""
+
+msgid "Saved {}."
+msgstr ""
+
+msgid "Select a playlist, or create a new one."
+msgstr ""
+
 msgid "Select all"
 msgstr ""
 
@@ -195,6 +246,9 @@ msgid "These libraries and software made ZEN Manager possible"
 msgstr ""
 
 msgid "This is a hobby project I maintain in my own time. Features and fixes land as I need them myself. I do read what the community asks for, and I take on the requests I think genuinely improve the app, as time allows."
+msgstr ""
+
+msgid "Tick an artist or album to add everything under it."
 msgstr ""
 
 msgid "Title"
@@ -273,6 +327,9 @@ msgid "{} free of {}"
 msgstr ""
 
 msgid "{} selected"
+msgstr ""
+
+msgid "{} track"
 msgstr ""
 
 msgid "{} track · {}"
