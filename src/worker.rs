@@ -560,8 +560,10 @@ impl Worker {
                     if progress_cancel.load(Ordering::Relaxed) {
                         return false;
                     }
-                    if total_bytes > 0 {
-                        let percent = (done * 100 / total_bytes) as u32;
+                    // checked_div also covers the zero-byte file libmtp can
+                    // report a total of 0 for.
+                    if let Some(percent) = (done * 100).checked_div(total_bytes) {
+                        let percent = percent as u32;
                         // libmtp fires this callback per USB chunk; only touching
                         // the event loop on whole-percent changes keeps it from
                         // flooding.
